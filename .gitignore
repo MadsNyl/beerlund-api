@@ -1,0 +1,37 @@
+# === Go build artifacts ===
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+gotail
+/tmp/
+
+# === Go workspace ===
+/bin/
+/pkg/
+/dist/
+
+# === SQLite database files ===
+*.db
+*.db-journal
+
+# === Environment/config files ===
+.env
+.env.local
+.env.*
+
+# === Logs & cache ===
+*.log
+*.tmp
+*.cache
+
+# === Editor/IDE files ===
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
