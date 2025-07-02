@@ -14,6 +14,7 @@ type EventList struct {
 	EndTime     time.Time 	`json:"end_time"`
 	ImageURL    string 		`json:"image_url"`
 	Participants int   		`json:"participants"`
+	MaxParticipants int 	`json:"max_participants"`
 }
 
 type EventListResponse struct {
@@ -34,6 +35,7 @@ type EventResponse struct {
 	StartTime   	time.Time 		`json:"start_time"`
 	EndTime     	time.Time 		`json:"end_time"`
 	ImageURL    	string    		`json:"image_url"`
+	MaxParticipants int 		`json:"max_participants"`
 	Participants 	[]Participant 	`json:"participants"`
 }
 

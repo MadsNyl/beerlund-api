@@ -10,7 +10,11 @@ import (
 type Store interface {
 	Close() error
 	Init(connUrl string) (error)
-	ListEvents(page, limit int) (models.EventListResponse, error)
+	ListEvents(page, limit int, ended bool) (models.EventListResponse, error)
+	GetEvent(id int) (models.EventResponse, error)
+	GetMaxParticipants(eventID int) (int, error)
+	CountParticipants(eventID int) (int, error)
+	InsertParticipant(eventID int, userID string) error
 }
 
 type PostgresStore struct {

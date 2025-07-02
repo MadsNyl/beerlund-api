@@ -12,7 +12,15 @@ import (
 func (h *Handler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
-
+	ended := r.URL.Query().Get("ended")
+	if ended == "" {
+		ended = "false" // Default to false if not specified
+	}
+	endedBool, err := strconv.ParseBool(ended)
+	if err != nil {
+		endedBool = false // Default to false if parsing fails
+	}
+	
 	page, err := strconv.Atoi(pageStr)
 	if err != nil || page < 1 {
 		page = 1
@@ -22,7 +30,7 @@ func (h *Handler) ListEvents(w http.ResponseWriter, r *http.Request) {
 		limit = 10
 	}
 
-	events, err := h.Store.ListEvents(page, limit)
+	events, err := h.Store.ListEvents(page, limit, endedBool)
 	if err != nil {
 		log.Printf("Error listing events: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

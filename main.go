@@ -5,10 +5,14 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/joho/godotenv"
+
+	clerkhttp "github.com/clerk/clerk-sdk-go/v2/http"
 
 	"api.beerlund.com/m/db"
 	"api.beerlund.com/m/handlers"
+	"api.beerlund.com/m/middleware"
 )
 
 func main() {
@@ -19,6 +23,13 @@ func main() {
 		log.Fatal("DATABASE_URL environment variable is not set")
 	}
 
+	clerkApiKey := os.Getenv("CLERK_API_KEY")
+	if clerkApiKey == "" {
+		log.Fatal("CLERK_API_KEY environment variable is not set")
+	}
+
+	clerk.SetKey(clerkApiKey)
+
 	store := db.NewPostgresStore()
 
 	if err := store.Init(dbUrl); err != nil {
@@ -28,8 +39,17 @@ func main() {
 
 	handler := &handlers.Handler{Store: store}
 
-	http.Handle("/events", http.HandlerFunc(handler.ListEvents))
+	mux := http.NewServeMux()
+
+	mux.Handle("/events", http.HandlerFunc(handler.ListEvents))
+	mux.Handle("/events/", http.HandlerFunc(handler.GetEvent))
+
+    joinHandler := http.HandlerFunc(handler.JoinEvent)
+    protectedJoin := clerkhttp.WithHeaderAuthorization()(joinHandler)
+    mux.Handle("/participate", protectedJoin)
+
+	wrapped := middleware.CorsMiddleware(mux)
 
 	log.Println("Starting server...")
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	log.Fatal(http.ListenAndServe(":8000", wrapped))
 }
