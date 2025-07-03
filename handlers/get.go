@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -29,7 +28,6 @@ func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Event not found", http.StatusNotFound)
 		return
 	}
-	fmt.Printf("GetEvent called with ID: %d\n", event.ID)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

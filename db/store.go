@@ -15,6 +15,8 @@ type Store interface {
 	GetMaxParticipants(eventID int) (int, error)
 	CountParticipants(eventID int) (int, error)
 	InsertParticipant(eventID int, userID string) error
+	IsParticipating(eventID int, userID string) (bool, error)
+	RemoveParticipant(eventID int, userID string) error
 }
 
 type PostgresStore struct {

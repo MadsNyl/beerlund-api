@@ -48,6 +48,10 @@ func main() {
     protectedJoin := clerkhttp.WithHeaderAuthorization()(joinHandler)
     mux.Handle("/participate", protectedJoin)
 
+	unassignHandler := http.HandlerFunc(handler.LeaveEvent)
+	protectedUnassign := clerkhttp.WithHeaderAuthorization()(unassignHandler)
+	mux.Handle("/leave", protectedUnassign)
+
 	wrapped := middleware.CorsMiddleware(mux)
 
 	log.Println("Starting server...")

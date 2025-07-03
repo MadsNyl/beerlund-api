@@ -88,3 +88,15 @@ func (p *PostgresStore) GetMaxParticipants(eventID int) (int, error) {
 	}
 	return maxParticipants, nil
 }
+
+func (p *PostgresStore) IsParticipating(eventID int, userID string) (bool, error) {
+    var exists bool
+    err := p.db.QueryRow(
+        `SELECT EXISTS(SELECT 1 FROM participant WHERE event_id = $1 AND user_id = $2)`,
+        eventID, userID,
+    ).Scan(&exists)
+    if err != nil {
+        return false, err
+    }
+    return exists, nil
+}

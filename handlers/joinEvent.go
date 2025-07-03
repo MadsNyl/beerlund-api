@@ -10,7 +10,6 @@ import (
 	"github.com/clerk/clerk-sdk-go/v2/user"
 )
 
-// request payload
 type joinEventRequest struct {
     EventID int `json:"event_id"`
 }
@@ -31,11 +30,6 @@ func (h *Handler) JoinEvent(w http.ResponseWriter, r *http.Request) {
 
     userID := usr.ID
 
-    if err != nil {
-        http.Error(w, "Invalid user ID", http.StatusInternalServerError)
-        return
-    }
-
     // 2) decode JSON body
     var req joinEventRequest
     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -44,6 +38,19 @@ func (h *Handler) JoinEvent(w http.ResponseWriter, r *http.Request) {
     }
     if req.EventID <= 0 {
         http.Error(w, "event_id must be a positive integer", http.StatusBadRequest)
+        return
+    }
+
+    // Check if the user is already participating in the event
+    isParticipating, err := h.Store.IsParticipating(req.EventID, userID)
+
+    if err != nil {
+        http.Error(w, "Failed to check participation status", http.StatusInternalServerError)
+        return
+    }
+
+    if isParticipating {
+        http.Error(w, "You are already participating in this event", http.StatusConflict)
         return
     }
 
