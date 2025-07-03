@@ -7,6 +7,7 @@ func CorsMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         // 1) Allow your frontend origin (or use "*" if you don't care)
         w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+        w.Header().Set("Access-Control-Allow-Origin", "https://beerlund.com")
         // 2) Allow the methods you support
         w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
         // 3) Allow any headers your client will send
