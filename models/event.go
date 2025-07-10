@@ -35,8 +35,9 @@ type EventResponse struct {
 	StartTime   	time.Time 		`json:"start_time"`
 	EndTime     	time.Time 		`json:"end_time"`
 	ImageURL    	string    		`json:"image_url"`
-	MaxParticipants int 		`json:"max_participants"`
+	MaxParticipants int 			`json:"max_participants"`
 	Participants 	[]Participant 	`json:"participants"`
+	Leaderboard 	[]EventLeaderboard `json:"leaderboard"`
 }
 
 type EventRequest struct {

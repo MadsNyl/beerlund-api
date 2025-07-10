@@ -57,7 +57,7 @@ func (p *PostgresStore) GetEvent(id int) (models.EventResponse, error) {
     }
     defer rows.Close()
 
-    ev.Participants = make([]models.Participant, 0)
+    participants := make([]models.Participant, 0)
     for rows.Next() {
         var pt models.Participant
         if err := rows.Scan(
@@ -69,24 +69,62 @@ func (p *PostgresStore) GetEvent(id int) (models.EventResponse, error) {
         ); err != nil {
             return models.EventResponse{}, err
         }
-        ev.Participants = append(ev.Participants, pt)
+        participants = append(participants, pt)
     }
     if err := rows.Err(); err != nil {
         return models.EventResponse{}, err
     }
+    ev.Participants = participants
+
+    // 3) Fetch all leaderboard scores for the event
+    const lbQ = `
+    SELECT
+      id,
+      user_id,
+      event_id,
+      rank,
+      score
+    FROM leaderboard
+    WHERE event_id = $1;
+    `
+    lbRows, err := p.db.Query(lbQ, id)
+    if err != nil {
+        return models.EventResponse{}, err
+    }
+    defer lbRows.Close()
+
+    leaderboard := make([]models.EventLeaderboard, 0)
+    for lbRows.Next() {
+        var lb models.EventLeaderboard
+        if err := lbRows.Scan(
+            &lb.ID,
+            &lb.ParticipantId,
+            &lb.EventId,
+            &lb.Rank,
+            &lb.Score,
+        ); err != nil {
+            return models.EventResponse{}, err
+        }
+        leaderboard = append(leaderboard, lb)
+    }
+    if err := lbRows.Err(); err != nil {
+        return models.EventResponse{}, err
+    }
+    ev.Leaderboard = leaderboard
+
     return ev, nil
 }
 
 func (p *PostgresStore) GetMaxParticipants(eventID int) (int, error) {
-	var maxParticipants int
-	err := p.db.QueryRow(
-		`SELECT max_participants FROM event WHERE id = $1`,
-		eventID,
-	).Scan(&maxParticipants)
-	if err != nil {
-		return 0, err
-	}
-	return maxParticipants, nil
+    var maxParticipants int
+    err := p.db.QueryRow(
+        `SELECT max_participants FROM event WHERE id = $1`,
+        eventID,
+    ).Scan(&maxParticipants)
+    if err != nil {
+        return 0, err
+    }
+    return maxParticipants, nil
 }
 
 func (p *PostgresStore) IsParticipating(eventID int, userID string) (bool, error) {
