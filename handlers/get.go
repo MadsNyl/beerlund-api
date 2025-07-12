@@ -2,18 +2,26 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/clerk/clerk-sdk-go/v2/user"
+
+	"api.beerlund.com/m/logger"
 )
 
 func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
+	logger.Info("Request to GetEvent", map[string]any{
+		"method": r.Method,
+		"url":    r.URL.String(),
+		"remote_addr": r.RemoteAddr,
+		"usr_agent": r.UserAgent(),
+	})
     parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/events/"), "/")
     if len(parts) == 0 || parts[0] == "" {
+		logger.Error("Request tried to fetch event without Event ID", nil)
         http.Error(w, "Event ID is required", http.StatusBadRequest)
         return
     }
@@ -21,13 +29,22 @@ func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
+		logger.Error("Invalid Event ID provided: "+err.Error(), map[string]any{
+			"event_id": idStr,
+			"remote_addr": r.RemoteAddr,
+			"usr_agent": r.UserAgent(),
+		})
 		http.Error(w, "Invalid Event ID", http.StatusBadRequest)
 		return
 	}
 
 	event, err := h.Store.GetEvent(id)
 	if err != nil {
-		log.Printf("Error fetching event with ID %d: %v", id, err)
+		logger.Error("Failed to fetch event from store: "+err.Error(), map[string]any{
+			"event_id": id,
+			"remote_addr": r.RemoteAddr,
+			"usr_agent": r.UserAgent(),
+		})
 		http.Error(w, "Event not found", http.StatusNotFound)
 		return
 	}
@@ -52,8 +69,12 @@ func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
 
 	usrList, err := user.List(r.Context(), params)
 	if err != nil {
+		logger.Error("Failed to fetch user details: "+err.Error(), map[string]any{
+			"event_id": id,
+			"remote_addr": r.RemoteAddr,
+			"usr_agent": r.UserAgent(),
+		})
 		http.Error(w, "Failed to fetch user details", http.StatusInternalServerError)
-		log.Printf("Error fetching user details: %v", err)
 		return
 	}
 
@@ -72,6 +93,16 @@ func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(event); err != nil {
+		logger.Error("Failed to encode event response: "+err.Error(), map[string]any{
+			"event_id": id,
+			"remote_addr": r.RemoteAddr,
+			"usr_agent": r.UserAgent(),
+		})
 		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 	}
+	logger.Info("Successfully fetched event", map[string]any{
+		"event_id": id,
+		"remote_addr": r.RemoteAddr,
+		"usr_agent": r.UserAgent(),
+	})
 }

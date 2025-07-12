@@ -13,10 +13,25 @@ import (
 	"api.beerlund.com/m/db"
 	"api.beerlund.com/m/handlers"
 	"api.beerlund.com/m/middleware"
+	"api.beerlund.com/m/logger"
 )
 
 func main() {
 	_ = godotenv.Load()
+
+	logEndpoint := os.Getenv("LOG_ENDPOINT")
+	if logEndpoint == "" {
+		log.Fatal("LOG_ENDPOINT environment variable is not set")
+	}
+
+	// Initialize the logger
+	logger.InitLogger(
+		logEndpoint,
+		100,
+		"beerlund-api",
+	)
+
+	logger.Info("Starting BeerLund API server...", nil)
 
 	dbUrl := os.Getenv("DATABASE_URL")
 	if dbUrl == "" {
@@ -54,6 +69,5 @@ func main() {
 
 	wrapped := middleware.CorsMiddleware(mux)
 
-	log.Println("Starting server...")
 	log.Fatal(http.ListenAndServe(":8000", wrapped))
 }
